@@ -38,7 +38,15 @@
     --chrome:'DM Sans', -apple-system, sans-serif;
     --serif:'Source Serif 4', Georgia, serif;
     --reading-font:var(--chrome);
+    --panel-bg:#FFFFFF;
+    --panel-text:#1B2430;
+    --panel-pivot:#164B9E;
   }
+
+  body.bg-white{ --panel-bg:#FFFFFF; }
+  body.bg-green{ --panel-bg:#DCEEDD; }
+  body.bg-orange{ --panel-bg:#FCE1C0; }
+  body.bg-yellow{ --panel-bg:#FDF3B7; }
 
   *{ box-sizing:border-box; }
   html,body{ height:100%; }
@@ -135,16 +143,16 @@
   #setup-screen textarea{
     width:100%;
     min-height:190px;
-    background:var(--card-bg);
+    background:var(--panel-bg);
     border:1px solid var(--border);
     border-radius:10px;
-    color:var(--text);
+    color:var(--panel-text);
     font-family:var(--reading-font);
     font-size:1.05rem;
     line-height:1.6;
     padding:1rem;
     resize:vertical;
-    transition:border-color .15s ease;
+    transition:border-color .15s ease, background-color .2s ease;
   }
 
   #setup-screen textarea:focus{
@@ -152,7 +160,7 @@
     outline:none;
   }
 
-  #setup-screen textarea::placeholder{ color:var(--muted); opacity:0.6; }
+  #setup-screen textarea::placeholder{ color:var(--panel-text); opacity:0.45; }
 
   .setup-meta{
     display:flex;
@@ -186,15 +194,22 @@
 
   #reader-screen{ display:none; }
 
+  .reading-panel{
+    background:var(--panel-bg);
+    border-radius:16px;
+    padding:1.25rem 1rem;
+    transition:background-color .2s ease;
+  }
+
   .word-stage{
     position:relative;
     display:flex;
     align-items:center;
     justify-content:center;
-    min-height:34vh;
+    min-height:30vh;
   }
 
-  .tick{ position:absolute; left:50%; width:1px; height:12px; background:var(--border); }
+  .tick{ position:absolute; left:50%; width:1px; height:12px; background:rgba(0,0,0,0.18); }
   .tick.top{ top:calc(50% - 48px); }
   .tick.bottom{ bottom:calc(50% - 48px); }
 
@@ -210,10 +225,10 @@
     line-height:1.15;
   }
 
-  .word-display .pre{ flex:1 1 0; text-align:right; overflow:hidden; }
-  .word-display .post{ flex:1 1 0; text-align:left; overflow:hidden; }
-  .word-display .pivot{ flex:0 0 auto; min-width:1ch; text-align:center; color:var(--accent2); }
-  .word-display .pivot-plain{ flex:0 0 auto; color:var(--text); }
+  .word-display .pre{ flex:1 1 0; text-align:right; overflow:hidden; color:var(--panel-text); }
+  .word-display .post{ flex:1 1 0; text-align:left; overflow:hidden; color:var(--panel-text); }
+  .word-display .pivot{ flex:0 0 auto; min-width:1ch; text-align:center; color:var(--panel-pivot); }
+  .word-display .pivot-plain{ flex:0 0 auto; color:var(--panel-text); }
 
   .beat{ width:5px; height:5px; border-radius:50%; background:var(--accent); margin:0.9rem auto 0; }
   .beat.pulse{ animation:pulse .2s ease-out; }
@@ -340,14 +355,29 @@
     width:13px; height:13px; border:none; border-radius:50%; background:var(--accent2); cursor:pointer;
   }
 
-  .chunk-toggle, .font-toggle{
+  .chunk-toggle, .font-toggle, .bg-toggle{
     flex:0 0 auto;
     display:flex;
     flex-direction:column;
     gap:0.4rem;
     align-items:flex-start;
   }
-  .chunk-toggle .ctrl-label, .font-toggle .ctrl-label{ font-size:0.7rem; color:var(--muted); }
+  .chunk-toggle .ctrl-label, .font-toggle .ctrl-label, .bg-toggle .ctrl-label{ font-size:0.7rem; color:var(--muted); }
+
+  .bg-swatches{ display:flex; gap:0.55rem; }
+  .bg-swatch{
+    width:22px;
+    height:22px;
+    border-radius:50%;
+    border:2px solid var(--border);
+    padding:0;
+    cursor:pointer;
+    transition:border-color .15s ease, box-shadow .15s ease;
+  }
+  .bg-swatch.active{
+    border-color:var(--accent2);
+    box-shadow:0 0 0 2px rgba(107,179,240,0.35);
+  }
   .chunk-buttons{ display:flex; gap:0.75rem; }
   .chunk-buttons button{
     background:none;
@@ -401,6 +431,7 @@
     .tempo{ flex:1 1 100%; order:3; }
     .chunk-toggle{ order:2; }
     .font-toggle{ order:2; }
+    .bg-toggle{ order:2; }
   }
 
   @media (prefers-reduced-motion: reduce){
@@ -408,7 +439,7 @@
   }
 </style>
 </head>
-<body class="font-sans">
+<body class="font-sans bg-white">
 <div class="app">
 
   <header>
@@ -434,10 +465,12 @@
 
     <!-- Reading -->
     <section id="reader-screen">
-      <div class="word-stage">
-        <span class="tick top"></span>
-        <div class="word-display" id="word-display" aria-live="off"></div>
-        <span class="tick bottom"></span>
+      <div class="reading-panel">
+        <div class="word-stage">
+          <span class="tick top"></span>
+          <div class="word-display" id="word-display" aria-live="off"></div>
+          <span class="tick bottom"></span>
+        </div>
       </div>
       <div class="beat" id="beat"></div>
       <div class="progress-wrap">
@@ -498,6 +531,16 @@
         <option value="dyslexic">Dyslexia-friendly</option>
       </select>
     </div>
+
+    <div class="bg-toggle">
+      <span class="ctrl-label">Background</span>
+      <div class="bg-swatches">
+        <button type="button" class="bg-swatch active" data-bg="white" style="background:#FFFFFF" aria-label="White background"></button>
+        <button type="button" class="bg-swatch" data-bg="green" style="background:#DCEEDD" aria-label="Pale green background"></button>
+        <button type="button" class="bg-swatch" data-bg="orange" style="background:#FCE1C0" aria-label="Orange background"></button>
+        <button type="button" class="bg-swatch" data-bg="yellow" style="background:#FDF3B7" aria-label="Yellow background"></button>
+      </div>
+    </div>
   </div>
 
   <p class="hint">Once you start, the WPM slider still works — nudge it up or down mid-read to find your pace.</p>
@@ -543,6 +586,7 @@
     chunkToggle: document.getElementById('chunk-toggle'),
     chunkButtons: document.querySelectorAll('.chunk-buttons button'),
     fontSelect: document.getElementById('font-select'),
+    bgButtons: document.querySelectorAll('.bg-swatches button'),
     body: document.body
   };
 
@@ -800,6 +844,15 @@
   els.fontSelect.addEventListener('change', function(){
     els.body.classList.remove('font-sans', 'font-serif', 'font-lexend', 'font-dyslexic');
     els.body.classList.add('font-' + els.fontSelect.value);
+  });
+
+  els.bgButtons.forEach(function(btn){
+    btn.addEventListener('click', function(){
+      els.bgButtons.forEach(function(b){ b.classList.remove('active'); });
+      btn.classList.add('active');
+      els.body.classList.remove('bg-white', 'bg-green', 'bg-orange', 'bg-yellow');
+      els.body.classList.add('bg-' + btn.getAttribute('data-bg'));
+    });
   });
 
   els.playBtn.addEventListener('click', function(){
